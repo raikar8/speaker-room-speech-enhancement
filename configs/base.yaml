@@ -1,0 +1,70 @@
+# Shared settings for every experiment. Experiment files override only what differs.
+experiment: B0
+seed: 0
+
+paths:
+  data_root: /content/data                     # extracted corpora (fast local disk on Colab)
+  manifest_dir: /content/data/manifests
+  out_dir: /content/drive/MyDrive/srse_runs    # checkpoints + results (persist on Drive)
+
+data:
+  sample_rate: 16000
+  segment_seconds: 4.0          # training crop
+  preroll_seconds: 0.5          # audio read before the crop so the reverb tail is realistic
+  min_utt_seconds: 2.0
+  split_seed: 0                 # speaker / utterance / RIR split - keep fixed across experiments
+  max_speakers: null            # null = all 251 train-clean-100 speakers
+  utts_per_speaker: 40          # SMALL setting (~35 h). null = all (~100 h)
+  val_utts_per_speaker: 2
+  val_items_per_class: 200      # fixed validation items per room class (4 s crops)
+  early_ms: 50                  # target = direct path + first 50 ms of reflections
+  max_rir_seconds: 2.0
+  train_level_db: [-35, -15]    # random input level (dBFS)
+  eval_level_db: -25
+  test_seed: 1234               # fixed test items -> paired comparisons across experiments
+  test_utts: 200                # test-clean utterances per room class
+  real_rir_test_utts: 300       # items with measured RIRs
+  max_test_seconds: 20
+  num_workers: 2
+
+stft:
+  n_fft: 320                    # 20 ms window
+  hop: 160                      # 10 ms hop
+
+model:
+  channels: [16, 32, 64, 128, 128]
+  rnn_hidden: 256
+  rnn_layers: 2
+  input_compress: 0.3
+
+mtl:
+  tap: P2                       # P1 encoder | P2 after GRU | P3 penultimate decoder layer
+  lambda_speaker: 0.0           # >0 MTL, 0 observe only, <0 adversarial (gradient reversal)
+  lambda_room: 0.0
+  shuffle_labels: false         # control: heads trained on random labels
+  feedback: false               # extension: FiLM the embedding back into the decoder
+  proj_dim: 256
+  emb_dim: 256                  # MTL embedding size (as in EUSIPCO 2022)
+  pool_frames: [25, 50, 100, 200, 350, 0]   # random pooling window per batch (frames; 0 = from start)
+  eval_pool_frames: 0
+  min_frames: 25                # head losses from 0.25 s on
+
+oracle:
+  room: false                   # control: true room label given to the network via FiLM (upper bound)
+
+train:
+  batch_size: 16
+  epochs: 30
+  lr: 1.0e-3
+  weight_decay: 0.0
+  grad_clip: 5.0
+  amp: true
+  lr_patience: 2
+  early_stop_patience: 6
+  log_every: 100
+
+loss:
+  compress: 0.3
+  mag_weight: 0.7
+  complex_weight: 0.3
+  sisdr_weight: 0.0

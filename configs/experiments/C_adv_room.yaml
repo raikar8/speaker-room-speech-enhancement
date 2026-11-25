@@ -1,0 +1,4 @@
+base: ../base.yaml
+experiment: C_adv_room
+# Control: remove room information from the backbone (gradient reversal)
+mtl: {lambda_speaker: 0.0, lambda_room: -0.1}

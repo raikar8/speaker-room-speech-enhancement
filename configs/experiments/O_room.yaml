@@ -1,0 +1,4 @@
+base: ../base.yaml
+experiment: O_room
+# Upper bound: the true room class is given to the network (FiLM on the GRU output)
+oracle: {room: true}

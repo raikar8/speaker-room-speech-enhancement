@@ -1,0 +1,4 @@
+base: ../base.yaml
+experiment: C_shuf
+# Control: same weights as M1 but random labels -> separates 'information helps' from 'extra loss regularises'
+mtl: {lambda_speaker: 1.0, lambda_room: 1.0, shuffle_labels: true}

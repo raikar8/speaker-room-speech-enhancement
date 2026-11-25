@@ -1,0 +1,10 @@
+torch>=2.2
+numpy
+scipy
+soundfile
+pyyaml
+pandas
+pesq
+pystoi
+# optional, for the SRMR reverberation metric (scripts/test.py --srmr):
+# git+https://github.com/jfsantos/SRMRpy

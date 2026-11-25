@@ -1,0 +1,4 @@
+base: ../base.yaml
+experiment: B0
+# Baseline: enhancement only. Heads still train on detached features (observe only).
+mtl: {lambda_speaker: 0.0, lambda_room: 0.0}

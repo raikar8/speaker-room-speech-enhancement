@@ -1,0 +1,4 @@
+base: ../base.yaml
+experiment: M1
+# Both, equal weight (EUSIPCO 2022 MTL(1,1))
+mtl: {lambda_speaker: 1.0, lambda_room: 1.0}

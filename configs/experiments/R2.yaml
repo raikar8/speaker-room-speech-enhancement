@@ -1,0 +1,4 @@
+base: ../base.yaml
+experiment: R2
+# Room information only, strong
+mtl: {lambda_speaker: 0.0, lambda_room: 1.0}

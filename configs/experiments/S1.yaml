@@ -1,0 +1,4 @@
+base: ../base.yaml
+experiment: S1
+# Speaker information only, weak
+mtl: {lambda_speaker: 0.1, lambda_room: 0.0}
