@@ -16,6 +16,7 @@ Open [notebooks/colab_quickstart.ipynb](../notebooks/colab_quickstart.ipynb) in 
 | 4. Probes | `scripts/probe.py` | `<run>/probe.json` (speaker / room linear-probe accuracy at P1, P2, P3) |
 | 5. Results | `scripts/aggregate.py` | `<out_dir>/results_test.md` — mean ± std over seeds and paired Wilcoxon tests against B0 |
 | Grid | `scripts/run_grid.py` | Runs 2–4 for many experiments × seeds; skips finished runs |
+| Export | `scripts/export_reverb.py` | Reverberation-augmented WAV files + manifest (for listening or ASR) |
 | Check | `scripts/check_causality.py` | Verifies the model is causal; reports parameters, latency and real-time factor |
 
 ## Data recipe (follows EUSIPCO 2022)
@@ -27,6 +28,23 @@ Open [notebooks/colab_quickstart.ipynb](../notebooks/colab_quickstart.ipynb) in 
   - `sim`: test-split simulated RIRs, 200 utterances per room class.
   - `real`: 300 items with measured RIRs from RIRS_NOISES, binned by estimated T60 (< 0.3 s, 0.3–0.6 s, > 0.6 s), because real RIRs have no room-size label.
 - Data is generated on the fly, so every epoch sees new crops, rooms and levels.
+
+## Exporting the augmented audio
+
+Training never writes reverberant audio to disk. To listen to it, or to build ASR training and test data, `scripts/export_reverb.py` renders items with exactly the same code as training. The exported files match what the model sees, up to 16-bit rounding.
+
+Each item gives `<id>_reverb.wav` (input), `<id>_target.wav` (direct path + 50 ms) and, with `--dry`, `<id>_dry.wav`. A `manifest.jsonl` / `manifest.csv` records speaker, room class, RIR, T60 (real RIRs), level and, for full utterances, the LibriSpeech transcript.
+
+| Goal | Command |
+| --- | --- |
+| Listen to 40 training examples (10 per room class) | `python scripts/export_reverb.py --split train --n 40 --dry --out_dir /content/reverb_examples` |
+| Exactly the items the test script scores | `python scripts/export_reverb.py --split test --match_eval --out_dir /content/reverb_test` (also `val`, `real`) |
+| Only one room class | add `--room large` |
+| ASR training data: every training utterance once, full length, random room, with transcripts | `python scripts/export_reverb.py --split train --all --full --out_dir /content/reverb_asr_train` |
+
+Splits: `train` (training speakers, training rooms), `val` (held-out utterances, validation rooms), `test` (test-clean speakers, unseen simulated rooms), `real` (test-clean speakers, measured RIRs).
+
+Disk space: the small setting's training utterances at full length are roughly 35 h, about 4 GB per stream (reverb, target, dry) as 16-bit WAV; all of train-clean-100 is about 11 GB per stream. Write to `/content` and copy a zip to Drive rather than writing thousands of files directly to Drive.
 
 ## Model
 

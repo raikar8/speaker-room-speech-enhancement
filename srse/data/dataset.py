@@ -148,23 +148,29 @@ class ReverbDataset(Dataset):
             x = x[:, 0]
         return x, pre
 
-    def __getitem__(self, idx):
-        it = self._random_item(idx) if self.items is None else self.items[idx]
+    def render(self, it):
+        """Render one item -> (reverberant, target, dry clean), all with the same gain."""
         u = self.utts[it["utt"]]
         x, pre = self._read(u, it["start"], it["length"])
         rir = None
         if it["rir"] is not None:
             rir = load_rir(self.root / it["rir"], self.sr, self.cfg.data.max_rir_seconds)
         rev, tgt = reverberate(x, rir, self.sr, self.cfg.data.early_ms)
-        rev, tgt = rev[pre:], tgt[pre:]
+        rev, tgt, dry = rev[pre:], tgt[pre:], x[pre:].astype(np.float32)
         if it["length"] is not None and len(rev) < it["length"]:
             pad = it["length"] - len(rev)
-            rev, tgt = np.pad(rev, (0, pad)), np.pad(tgt, (0, pad))
+            rev, tgt, dry = np.pad(rev, (0, pad)), np.pad(tgt, (0, pad)), np.pad(dry, (0, pad))
         gain = 10 ** (it["level"] / 20) / (np.sqrt(np.mean(rev ** 2)) + 1e-8)
-        rev, tgt = rev * gain, tgt * gain
-        peak = max(np.abs(rev).max(), np.abs(tgt).max(), 1e-8)
+        rev, tgt, dry = rev * gain, tgt * gain, dry * gain
+        peak = max(np.abs(rev).max(), np.abs(tgt).max(), np.abs(dry).max(), 1e-8)
         if peak > 0.99:
-            rev, tgt = rev * 0.99 / peak, tgt * 0.99 / peak
+            rev, tgt, dry = rev * 0.99 / peak, tgt * 0.99 / peak, dry * 0.99 / peak
+        return rev, tgt, dry
+
+    def __getitem__(self, idx):
+        it = self._random_item(idx) if self.items is None else self.items[idx]
+        u = self.utts[it["utt"]]
+        rev, tgt, _ = self.render(it)
 
         spk = self.spk2idx.get(u["speaker"], -1)
         spk_target, room_target = spk, it["room"]

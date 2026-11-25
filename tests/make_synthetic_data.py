@@ -47,6 +47,8 @@ def main():
             f0 = rng.uniform(90, 250)
             for u in range(n_utt):
                 sf.write(d / f"{spk}-1-{u:04d}.flac", fake_speech(rng, f0, rng.uniform(2.5, 6.0)), SR)
+            (d / f"{spk}-1.trans.txt").write_text(
+                "".join(f"{spk}-1-{u:04d} FAKE TRANSCRIPT NUMBER {u}\n" for u in range(n_utt)), encoding="utf-8")
     for cls, t60 in (("smallroom", 0.25), ("mediumroom", 0.5), ("largeroom", 0.9)):
         for r in range(1, 11):
             d = root / "RIRS_NOISES" / "simulated_rirs" / cls / f"Room{r:03d}"
